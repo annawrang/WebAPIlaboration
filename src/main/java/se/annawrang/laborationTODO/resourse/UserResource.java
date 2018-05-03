@@ -1,7 +1,9 @@
 package se.annawrang.laborationTODO.resourse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import se.annawrang.laborationTODO.data.Todo;
 import se.annawrang.laborationTODO.data.User;
+import se.annawrang.laborationTODO.exception.MissingPropertyException;
 import se.annawrang.laborationTODO.service.UserService;
 
 import javax.ws.rs.*;
@@ -38,53 +40,80 @@ public class UserResource {
     @Path("{id}")
     public Response getUser(@PathParam("id") Long id){
 
-        User user = service.getUser(id);
-        if(user == null){
-            return status(NOT_FOUND).build();
+        if(doesUserExist(id)){
+            User user = service.getUser(id);
+            return ok(user).build();
         }
-        return ok(user).build();
+            return status(NOT_FOUND).build();
     }
 
     @GET
     @Path("{id}/todos")
     public Response getUserTodos(@PathParam("id") Long id, @QueryParam("priority") @DefaultValue("0") int priority){
-        User user = service.getUser(id);
-        if(user == null) return Response.status(NOT_FOUND).build();
-        if(priority == 0) return Response.ok(user.getTodos()).build();
-
-            return Response.ok(user.getTodos()
-                    .stream()
-                    .filter(todo -> todo.getPriority() == priority)
-                    .collect(Collectors.toList())).build();
+        if(doesUserExist(id)){
+            User user = service.getUser(id);
+            if(priority == 0) return Response.ok(user.getTodos()).build();
+            else {
+                return Response.ok(user.getTodos()
+                        .stream()
+                        .filter(todo -> todo.getPriority() == priority)
+                        .collect(Collectors.toList())).build();
+            }
+        }
+        return Response.status(NOT_FOUND).build();
     }
 
     @POST
     public Response saveUser(User user){
-        if(validateUser(user)) {
-            User savedUser = service.saveUser(user);
+        validateUser(user);
+            user = service.saveUser(user);
+            List<Todo> todos = user.getTodos();
+            if(!(todos == null)){
+                todos.forEach(t -> service.saveTodo(t));
+            }
             return Response.status(CREATED).header("Location", uriInfo
                     .getAbsolutePathBuilder()
-                    .path(savedUser.getId().toString())).build();
-        }
-        return Response.status(BAD_REQUEST).build();
+                    .path(user.getId().toString())).build();
+    }
 
+    @PUT
+    @Path("{id}/todos/{todosId}")
+    public Response addTodoToUser(@PathParam("id") Long id,
+                                  @PathParam("todosId") Long todosId){
+        User user = service.getUser(id);
+        Todo todo = service.getTodo(todosId);
+
+        if(user == null){
+            return Response.status(NOT_FOUND).build();
+        } else if(todo == null){
+            return Response.status(NOT_FOUND).build();
+        }
+        user.getTodos().add(todo);
+        service.saveUser(user);
+        todo.setUser(user);
+        service.saveTodo(todo);
+
+        return Response.status(NO_CONTENT).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response deleteUser(@PathParam("id") Long id){
-        User user = service.getUser(id);
-        if (user == null){
-            return Response.status(NOT_FOUND).build();
+        if(doesUserExist(id)){
+            User user = service.getUser(id);
+            service.deleteUser(user);
+            return Response.status(NO_CONTENT).build();
         }
-        service.delete(user);
-        return Response.status(NO_CONTENT).build();
+            return Response.status(NOT_FOUND).build();
     }
 
-    private boolean validateUser(User user) {
+    private void validateUser(User user) {
         if(user.getFirstName() == null || user.getSurName() == null){
-            return false;
+            throw new MissingPropertyException("Missing property. You must provide first name and surname for User");
         }
-        return true;
+    }
+
+    private boolean doesUserExist(Long id){
+        return service.getUser(id) != null;
     }
 }

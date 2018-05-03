@@ -5,16 +5,13 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import javax.persistence.*;
 
 @Entity
-public class Todo {
+public class Todo extends AbstractEntity{
 
-    @Id
-    @GeneratedValue
-    private Long id;
     @Column(nullable = false)
     private String description;
     @Column(nullable = false)
     private int priority;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JsonBackReference
     private User user;
 
@@ -25,15 +22,11 @@ public class Todo {
         this.priority = priority;
     }
 
-    /*
+
     public Todo(String description, int priority, User user) {
         this.description = description;
         this.priority = priority;
         this.user = user;
-    } */
-
-    public Long getId() {
-        return id;
     }
 
     public String getDescription() {

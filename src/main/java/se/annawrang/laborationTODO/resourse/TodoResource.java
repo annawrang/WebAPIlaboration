@@ -1,22 +1,15 @@
 package se.annawrang.laborationTODO.resourse;
 
-import org.glassfish.jersey.server.Uri;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.MissingRequiredPropertiesException;
-import org.springframework.stereotype.Component;
 import se.annawrang.laborationTODO.data.Todo;
 import se.annawrang.laborationTODO.exception.MissingPropertyException;
-import se.annawrang.laborationTODO.resourse.filter.Logging;
 import se.annawrang.laborationTODO.service.TodoService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
-import java.util.List;
 
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -33,42 +26,48 @@ public class TodoResource {
     @GET
     @Path("{id}")
     public Response getTodo(@PathParam("id") Long id){
-        Todo todo = service.getTodo(id);
-        if(todo == null){
-            return Response.status(NOT_FOUND).build();
+        if(doesTodoExist(id)){
+            Todo todo = service.getTodo(id);
+            return Response.ok(todo).build();
         }
-        return Response.ok(todo).build();
+            return Response.status(NOT_FOUND).build();
     }
 
     @GET
     public Response getAllTodos(){
-        List<Todo> todos = service.getAllTodos();
+        Iterable<Todo> todos = service.getAllTodos();
         return Response.ok(todos).build();
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
     public Response saveTodo(Todo todo){
-
-        if(todo.getDescription() == null){
-            // throw new MissingPropertyException(String.format("Missing property. You need to provide TODO description."));
-        } else if(todo.getPriority() == 0){
-            // throw new MissingPropertyException(String.format("Missing property. TODO priority must be set to O<."));
-        }
-        Todo savedTodo = service.saveTodo(todo);
+        validateTodo(todo);
+        todo = service.saveTodo(todo);
 
         return Response.status(CREATED).header("Location",
-                uriInfo.getAbsolutePathBuilder().path(savedTodo.getId().toString())).build();
+                uriInfo.getAbsolutePathBuilder().path(todo.getId().toString())).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response deleteTodo(@PathParam("id") Long id){
-        Todo todo = service.getTodo(id);
-        if(todo == null){
-            return Response.status(NOT_FOUND).build();
+        if(doesTodoExist(id)){
+            Todo todo = service.getTodo(id);
+            service.deleteTodo(todo);
+            return Response.status(NO_CONTENT).build();
         }
-        service.deleteTodo(todo);
-        return Response.status(NO_CONTENT).build();
+            return Response.status(NOT_FOUND).build();
+    }
+
+    private boolean doesTodoExist(Long id){
+        return service.getTodo(id) != null;
+    }
+
+    private void validateTodo(Todo todo){
+        if(todo.getDescription() == null){
+             throw new MissingPropertyException(String.format("Missing property. You need to provide TODO description."));
+        } else if(todo.getPriority() == 0){
+             throw new MissingPropertyException(String.format("Missing property. TODO priority must be set to O<."));
+        }
     }
 }

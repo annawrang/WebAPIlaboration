@@ -11,13 +11,4 @@ import java.util.Optional;
 @Repository
 public interface TodoRepository extends CrudRepository<Todo, Long> {
 
-    Optional<Todo> findById(Long id);
-
-    @Query("SELECT t FROM Todo t")
-    List<Todo> getAll();
-
-    Todo save(Todo todo);
-
-    @Override
-    void delete(Todo todo);
 }

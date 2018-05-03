@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import se.annawrang.laborationTODO.data.Todo;
 import se.annawrang.laborationTODO.repository.TodoRepository;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,8 +29,8 @@ public class TodoService {
         return repository.save(todo);
     }
 
-    public List<Todo> getAllTodos(){
-        return repository.getAll();
+    public Iterable<Todo> getAllTodos(){
+        return repository.findAll();
     }
 
     public void deleteTodo(Todo todo){

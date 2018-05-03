@@ -7,17 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class User{
+public class User extends AbstractEntity{
 
-    @Id
-    @GeneratedValue
-    private Long id;
     @Column(nullable = false)
     private String firstName;
     @Column(nullable = false)
     private String surName;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user")
     @JsonManagedReference
     private List<Todo> todos = new ArrayList<>();
 
@@ -29,10 +26,6 @@ public class User{
         this.surName = surName;
     }
 
-    public Long getId(){
-        return id;
-    }
-
     public String getFirstName() {
         return firstName;
     }
@@ -40,7 +33,6 @@ public class User{
     public String getSurName() {
         return surName;
     }
-
 
     public List<Todo> getTodos() {
         return todos;
@@ -52,6 +44,4 @@ public class User{
             t.removeUser();
         }
     }
-
-
 }

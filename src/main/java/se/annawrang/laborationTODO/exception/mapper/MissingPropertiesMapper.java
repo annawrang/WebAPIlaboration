@@ -15,10 +15,10 @@ import static javax.ws.rs.core.Response.Status.*;
 
 @Provider
 @Logging
-public class MissingRequiredPropertiesMapper implements ExceptionMapper<MissingPropertyException> {
+public class MissingPropertiesMapper implements ExceptionMapper<MissingPropertyException> {
 
     @Override
     public Response toResponse(MissingPropertyException e) {
-        return status(BAD_REQUEST).entity(singletonMap("error", e.getMessage())).build();
+        return Response.status(BAD_REQUEST).entity(singletonMap("error", e.getMessage())).build();
     }
 }

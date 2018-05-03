@@ -11,13 +11,9 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends CrudRepository<User, Long>{
 
-    Optional<User> findById(Long id);
+    @Query("SELECT u FROM User u left join fetch u.todos t where u.id= :idIn")
+    Optional<User> findById(Long idIn);
 
-    @Query("SELECT u FROM User u")
+    @Query("SELECT u FROM User u left join fetch u.todos t")
     List<User> findAll();
-
-    User save(User user);
-
-    @Override
-    void delete(User user);
 }
